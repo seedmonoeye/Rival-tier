@@ -306,68 +306,57 @@ document.body.addEventListener('click', () => { if (selectedId){ selectedId = nu
 /* ===================== RESULTS ===================== */
 async function loadResults(){
   $('#resultsMeta').textContent = 'Loading…';
-  const { data, error } = await sb.rpc('get_results');
-  if (error) { $('#resultsMeta').textContent = 'Could not load results: ' + error.message; return; }
+  try {
+    // โหลดข้อมูล items และ votes ทั้งหมดพร้อมกันแบบตรงๆ
+    const [itemsRes, votesRes] = await Promise.all([
+      sb.from('items').select('*').order('sort').order('no'),
+      sb.from('votes').select('*')
+    ]);
 
-  results = (data.items || []).map(r => ({
-    ...r,
-    avg: r.avg ?? 0,
-    communityTier: r.total ? toTier(r.avg) : null,
-  }));
-  $('#resultsMeta').textContent =
-    `${data.totalVoters} voter${data.totalVoters === 1 ? '' : 's'} · updated ${new Date().toLocaleTimeString()}`;
-  renderResults();
+    if (itemsRes.error) throw itemsRes.error;
+    if (votesRes.error) throw votesRes.error;
+
+    const allItems = itemsRes.data || [];
+    const allVotes = votesRes.data || [];
+
+    // หาจำนวนผู้โหวตที่ไม่ซ้ำกันทั้งหมด
+    const uniqueVoters = new Set(allVotes.map(v => v.voter_id)).size;
+
+    // จัดกลุ่มคะแนนแยกตาม item_id
+    const statsMap = {};
+    allItems.forEach(i => {
+      statsMap[i.id] = { ...i, total: 0, sum: 0, counts: { S:0, A:0, B:0, C:0, D:0 } };
+    });
+
+    const scoreMap = { S: 5, A: 4, B: 3, C: 2, D: 1 };
+
+    allVotes.forEach(v => {
+      if (statsMap[v.item_id] && scoreMap[v.tier]) {
+        statsMap[v.item_id].total += 1;
+        statsMap[v.item_id].sum += scoreMap[v.tier];
+        statsMap[v.item_id].counts[v.tier] += 1;
+      }
+    });
+
+    results = Object.values(statsMap).map(r => {
+      const avg = r.total > 0 ? r.sum / r.total : 0;
+      return {
+        ...r,
+        avg: avg,
+        communityTier: r.total > 0 ? toTier(avg) : null
+      };
+    });
+
+    // เรียงลำดับตามคะแนนเฉลี่ยมากไปน้อย
+    results.sort((a, b) => b.avg - a.avg || b.total - a.total || a.sort - b.sort);
+
+    $('#resultsMeta').textContent =
+      `${uniqueVoters} voter${uniqueVoters === 1 ? '' : 's'} · updated ${new Date().toLocaleTimeString()}`;
+    renderResults();
+  } catch (err) {
+    $('#resultsMeta').textContent = 'Could not load results: ' + err.message;
+  }
 }
-
-function renderResults(){
-  const keys = [...TIERS, 'NA'];
-  const groups = Object.fromEntries(keys.map(k => [k, []]));
-  results.forEach(r => groups[r.communityTier || 'NA'].push(r));
-
-  const wrap = $('#resultTiers');
-  wrap.innerHTML = '';
-  keys.forEach(k => {
-    if (k === 'NA' && !groups.NA.length) return;
-    const row = document.createElement('div');
-    row.className = 'tier';
-    row.innerHTML = k === 'NA'
-      ? `<div class="tier-label small" style="background:#4a5068">No<br>votes</div><div class="tier-drop"></div>`
-      : `<div class="tier-label" style="background:var(--${k})">${k}</div><div class="tier-drop"></div>`;
-    const drop = row.querySelector('.tier-drop');
-    groups[k].forEach(r => drop.appendChild(makeCard(r, {
-      interactive: false,
-      stat: r.total ? `★ ${r.avg.toFixed(2)} · ${r.total} vote${r.total > 1 ? 's' : ''}` : ''
-    })));
-    wrap.appendChild(row);
-  });
-
-  $('#distBody').innerHTML = results.map((r, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>CC ${esc(r.no)} · ${esc(r.name)}</td>
-      <td>${r.communityTier || '–'}</td>
-      <td>${r.total ? r.avg.toFixed(2) : '–'}</td>
-      <td>${r.total}</td>
-      <td><div class="bar">${TIERS.map(t => r.counts[t]
-        ? `<span style="width:${r.counts[t] / r.total * 100}%;background:var(--${t})" title="${t}: ${r.counts[t]}"></span>`
-        : '').join('')}</div></td>
-    </tr>`).join('');
-}
-
-$('#btnRefresh').addEventListener('click', loadResults);
-
-$('#btnCsv').addEventListener('click', () => {
-  if (!results.length) return toast('No results to export yet.');
-  const head = ['Rank','No','Name','Community Tier','Avg Score','Total Votes', ...TIERS];
-  const rows = results.map((r, i) => [i + 1, r.no, r.name, r.communityTier || '',
-    r.total ? r.avg.toFixed(2) : '', r.total, ...TIERS.map(t => r.counts[t])]);
-  const csv = [head, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type:'text/csv' }));
-  a.download = 'blokees-rivals-results.csv';
-  a.click();
-});
-
 /* ===================== TABS ===================== */
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
