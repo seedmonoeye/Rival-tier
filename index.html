@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blokees Marvel  Champion Class – Tier List & Vote</title>
+<title>Blokees Marvel Champion Class – Tier List & Vote</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@300;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -97,7 +97,7 @@
 <body>
 
 <header>
-  <h1>Blokees Marvel  · Champion Class</h1>
+  <h1>Blokees Marvel Rivals · Champion Class</h1>
   <p>Rank the figures, submit your vote, and see what the community thinks.</p>
 </header>
 
@@ -161,6 +161,8 @@ const SUPABASE_URL      = 'https://elqvkhfpepzrzzfqbbyl.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_fnzXW7XI7z_I1LBGlwj7pg_43Mu4VQQ';
 
 
+
+  
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ===================== STATE ===================== */
@@ -307,7 +309,6 @@ document.body.addEventListener('click', () => { if (selectedId){ selectedId = nu
 async function loadResults(){
   $('#resultsMeta').textContent = 'Loading…';
   try {
-    // โหลดข้อมูล items และ votes ทั้งหมดพร้อมกันแบบตรงๆ
     const [itemsRes, votesRes] = await Promise.all([
       sb.from('items').select('*').order('sort').order('no'),
       sb.from('votes').select('*')
@@ -319,10 +320,8 @@ async function loadResults(){
     const allItems = itemsRes.data || [];
     const allVotes = votesRes.data || [];
 
-    // หาจำนวนผู้โหวตที่ไม่ซ้ำกันทั้งหมด
     const uniqueVoters = new Set(allVotes.map(v => v.voter_id)).size;
 
-    // จัดกลุ่มคะแนนแยกตาม item_id
     const statsMap = {};
     allItems.forEach(i => {
       statsMap[i.id] = { ...i, total: 0, sum: 0, counts: { S:0, A:0, B:0, C:0, D:0 } };
@@ -347,7 +346,6 @@ async function loadResults(){
       };
     });
 
-    // เรียงลำดับตามคะแนนเฉลี่ยมากไปน้อย
     results.sort((a, b) => b.avg - a.avg || b.total - a.total || a.sort - b.sort);
 
     $('#resultsMeta').textContent =
@@ -357,7 +355,8 @@ async function loadResults(){
     $('#resultsMeta').textContent = 'Could not load results: ' + err.message;
   }
 }
-  function renderResults(){
+
+function renderResults(){
   const keys = [...TIERS, 'NA'];
   const groups = Object.fromEntries(keys.map(k => [k, []]));
   results.forEach(r => groups[r.communityTier || 'NA'].push(r));
@@ -391,6 +390,21 @@ async function loadResults(){
         : '').join('')}</div></td>
     </tr>`).join('');
 }
+
+$('#btnRefresh').addEventListener('click', loadResults);
+
+$('#btnCsv').addEventListener('click', () => {
+  if (!results.length) return toast('No results to export yet.');
+  const head = ['Rank','No','Name','Community Tier','Avg Score','Total Votes', ...TIERS];
+  const rows = results.map((r, i) => [i + 1, r.no, r.name, r.communityTier || '',
+    r.total ? r.avg.toFixed(2) : '', r.total, ...TIERS.map(t => r.counts[t])]);
+  const csv = [head, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type:'text/csv' }));
+  a.download = 'blokees-rivals-results.csv';
+  a.click();
+});
+
 /* ===================== TABS ===================== */
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
