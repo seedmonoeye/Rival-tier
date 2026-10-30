@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blokees Marvel Rivals Champion Class – Tier List & Vote</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0f1a; --panel:#141a2b; --line:#24304d; --accent:#ffcc00; --text:#e8ecf5;
+    --S:#ff4d6d; --A:#ff9f43; --B:#ffd93d; --C:#6bcb77; --D:#4d96ff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:'Kanit',sans-serif; color:var(--text);
+    background:radial-gradient(circle at top,#1b2440 0%,var(--bg) 60%); min-height:100vh;
+  }
+  header{text-align:center; padding:28px 16px 8px}
+  header h1{
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(28px,5vw,52px); letter-spacing:2px;
+    margin:0; color:var(--accent); text-shadow:0 0 18px rgba(255,204,0,.35);
+  }
+  header p{margin:4px 0 0; opacity:.7; font-weight:300}
+  main{max-width:1200px; margin:0 auto; padding:16px}
+  h2{font-family:'Bebas Neue'; letter-spacing:1px; margin:20px 0 8px; font-size:26px}
+
+  nav.tabs{display:flex; justify-content:center; gap:8px; margin:14px 0 0}
+  .tab{
+    padding:9px 22px; border-radius:999px; border:1px solid var(--line); background:transparent;
+    color:var(--text); cursor:pointer; font-family:inherit; font-size:15px;
+  }
+  .tab.active{background:var(--accent); color:#111; border-color:var(--accent)}
+  .view{display:none} .view.active{display:block}
+
+  .actionbar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+    margin:12px 0; padding:12px 14px; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  }
+  .actionbar .group{display:flex; gap:8px; flex-wrap:wrap}
+  #status, #resultsMeta{font-size:14px; opacity:.85}
+
+  .tier{
+    display:flex; min-height:120px; margin-bottom:6px; background:var(--panel);
+    border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  }
+  .tier-label{
+    width:90px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Bebas Neue',sans-serif; font-size:44px; color:#111; text-align:center; line-height:1;
+  }
+  .tier-label.small{font-size:22px; color:#fff}
+  .tier-drop{flex:1; display:flex; flex-wrap:wrap; gap:8px; padding:8px; align-content:flex-start}
+  .tier-drop.over, .tier.highlight .tier-drop{background:rgba(255,204,0,.08); outline:2px dashed var(--accent)}
+  #pool{min-height:140px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px}
+
+  .card{
+    width:110px; background:#1e2640; border:2px solid transparent; border-radius:8px;
+    overflow:hidden; cursor:grab; user-select:none; position:relative; transition:transform .15s, border-color .15s;
+  }
+  .card.static{cursor:default}
+  .card:hover{transform:translateY(-3px)}
+  .card.selected{border-color:var(--accent); box-shadow:0 0 14px rgba(255,204,0,.5)}
+  .card.dragging{opacity:.4}
+  .card img{width:100%; height:110px; object-fit:cover; display:block; background:#fff}
+  .card .info{padding:4px 6px; font-size:12px; line-height:1.25}
+  .card .no{color:var(--accent); font-family:'Bebas Neue'; font-size:15px}
+  .card .stat{margin-top:2px; font-size:11px; color:var(--accent); opacity:.9}
+
+  button.btn{
+    padding:9px 16px; border:none; border-radius:6px; cursor:pointer; font-family:inherit;
+    font-weight:500; background:var(--accent); color:#111;
+  }
+  button.btn.ghost{background:transparent; color:var(--text); border:1px solid var(--line)}
+  button.btn:disabled{opacity:.5; cursor:wait}
+  .hint{font-size:13px; opacity:.6; text-align:center; margin-top:10px}
+
+  .table-wrap{overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px}
+  table.dist{width:100%; border-collapse:collapse; font-size:14px}
+  .dist th, .dist td{padding:9px 10px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap}
+  .dist th{font-weight:500; opacity:.7}
+  .bar{display:flex; height:14px; border-radius:7px; overflow:hidden; background:#0e1322; min-width:180px}
+  .bar span{display:block; height:100%}
+  .legend{display:flex; gap:14px; font-size:13px; margin:0 0 8px}
+  .legend i{display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:5px; vertical-align:-1px}
+
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translate(-50%,120px); z-index:99;
+    background:#111827; border:1px solid var(--accent); padding:10px 18px; border-radius:8px; transition:transform .25s;
+  }
+  #toast.show{transform:translate(-50%,0)}
+
+  @media (max-width:600px){
+    .tier-label{width:60px; font-size:32px}
+    .card{width:86px} .card img{height:86px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Blokees Marvel Rivals · Champion Class</h1>
+  <p>Rank the figures, submit your vote, and see what the community thinks.</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-view="vote">My Vote</button>
+  <button class="tab" data-view="results">Community Results</button>
+</nav>
+
+<main>
+  <!-- ============ MY VOTE ============ -->
+  <section id="view-vote" class="view active">
+    <div class="actionbar">
+      <span id="status">Loading…</span>
+      <div class="group">
+        <button class="btn ghost" id="btnClear">Clear Tiers</button>
+        <button class="btn" id="btnSubmit">Submit Vote</button>
+      </div>
+    </div>
+    <section id="tiers"></section>
+    <h2>Unranked</h2>
+    <div id="pool" class="tier-drop" data-tier="pool"></div>
+    <p class="hint">Drag &amp; drop cards into a tier — or on mobile, tap a card, then tap a tier.</p>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="view-results" class="view">
+    <div class="actionbar">
+      <span id="resultsMeta">Loading…</span>
+      <div class="group">
+        <button class="btn ghost" id="btnRefresh">Refresh</button>
+        <button class="btn ghost" id="btnCsv">Export CSV</button>
+      </div>
+    </div>
+    <section id="resultTiers"></section>
+
+    <h2>Vote Breakdown</h2>
+    <div class="legend">
+      <span><i style="background:var(--S)"></i>S</span>
+      <span><i style="background:var(--A)"></i>A</span>
+      <span><i style="background:var(--B)"></i>B</span>
+      <span><i style="background:var(--C)"></i>C</span>
+      <span><i style="background:var(--D)"></i>D</span>
+    </div>
+    <div class="table-wrap">
+      <table class="dist">
+        <thead><tr><th>#</th><th>Model</th><th>Tier</th><th>Avg Score</th><th>Votes</th><th>Distribution</th></tr></thead>
+        <tbody id="distBody"></tbody>
+      </table>
+    </div>
+    <p class="hint">Score: S = 5 · A = 4 · B = 3 · C = 2 · D = 1</p>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+/* ===================== CONFIG (EDIT THIS) ===================== */
+const SUPABASE_URL      = 'https://elqvkhfpepzrzzfqbbyl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_fnzXW7XI7z_I1LBGlwj7pg_43Mu4VQQ';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ===================== STATE ===================== */
+const TIERS = ['S','A','B','C','D'];
+const LS_DRAFT = 'blokees-rivals-draft-v3';
+const LS_VOTER = 'blokees-rivals-voter-uuid';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuid = () => crypto.randomUUID ? crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+    });
+
+let voterId = localStorage.getItem(LS_VOTER);
+if (!voterId || !UUID_RE.test(voterId)) { voterId = uuid(); localStorage.setItem(LS_VOTER, voterId); }
+
+let items = {};
+let placement = emptyPlacement();
+let selectedId = null;
+let results = [];
+
+function emptyPlacement(){ const p = { pool:[] }; TIERS.forEach(t => p[t] = []); return p; }
+
+/* ===================== HELPERS ===================== */
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2500);
+}
+const setStatus = msg => $('#status').textContent = msg;
+const toTier = a => a >= 4.5 ? 'S' : a >= 3.5 ? 'A' : a >= 2.5 ? 'B' : a >= 1.5 ? 'C' : 'D';
+
+function placeholder(name){
+  const initials = name.split(/\s+/).map(w => w[0]).join('').slice(0,3).toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110">
+    <rect width="100%" height="100%" fill="#2a3456"/>
+    <text x="50%" y="55%" font-size="30" fill="#ffcc00" text-anchor="middle"
+      font-family="Arial" font-weight="bold">${esc(initials)}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+function makeCard(it, { interactive = true, stat = '' } = {}){
+  const el = document.createElement('div');
+  el.className = 'card' + (interactive ? '' : ' static');
+  el.dataset.id = it.id;
+  el.draggable = interactive;
+  el.innerHTML = `
+    <img alt="${esc(it.name)}" referrerpolicy="no-referrer" loading="lazy">
+    <div class="info"><div class="no">CC ${esc(it.no)}</div>${esc(it.name)}
+      ${stat ? `<div class="stat">${stat}</div>` : ''}</div>`;
+  const img = el.querySelector('img');
+  img.onerror = () => { img.onerror = null; img.src = placeholder(it.name); };
+  img.src = it.img || placeholder(it.name);
+  return el;
+}
+
+/* ===================== MY VOTE ===================== */
+function voteCard(id){
+  const el = makeCard(items[id]);
+  if (id === selectedId) el.classList.add('selected');
+  el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', id); el.classList.add('dragging'); });
+  el.addEventListener('dragend', () => el.classList.remove('dragging'));
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    selectedId = (selectedId === id) ? null : id;
+    renderVote();
+  });
+  return el;
+}
+
+function renderVote(){
+  const wrap = $('#tiers');
+  wrap.innerHTML = '';
+  TIERS.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'tier' + (selectedId ? ' highlight' : '');
+    row.innerHTML = `<div class="tier-label" style="background:var(--${t})">${t}</div>
+                     <div class="tier-drop" data-tier="${t}"></div>`;
+    wrap.appendChild(row);
+  });
+  document.querySelectorAll('#view-vote .tier-drop').forEach(zone => {
+    zone.innerHTML = '';
+    placement[zone.dataset.tier].forEach(id => zone.appendChild(voteCard(id)));
+    bindZone(zone);
+  });
+}
+
+function bindZone(zone){
+  if (zone.dataset.bound) return;
+  zone.dataset.bound = '1';
+  const tier = zone.dataset.tier;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('over');
+    const id = e.dataTransfer.getData('text/plain');
+    const target = e.target.closest('.card');
+    moveItem(id, tier, target && target.dataset.id !== id ? target.dataset.id : null);
+  });
+  zone.addEventListener('click', () => { if (selectedId) moveItem(selectedId, tier); });
+}
+
+function moveItem(id, toTier, beforeId = null){
+  if (!items[id]) return;
+  Object.keys(placement).forEach(k => placement[k] = placement[k].filter(x => x !== id));
+  const list = placement[toTier];
+  const idx = beforeId ? list.indexOf(beforeId) : -1;
+  idx >= 0 ? list.splice(idx, 0, id) : list.push(id);
+  selectedId = null;
+  localStorage.setItem(LS_DRAFT, JSON.stringify(placement));
+  setStatus('⚠ You have unsubmitted changes');
+  renderVote();
+}
+
+$('#btnSubmit').addEventListener('click', async () => {
+  const votes = {};
+  TIERS.forEach(t => placement[t].forEach(id => votes[id] = t));
+  if (!Object.keys(votes).length) return toast('Place at least one model in a tier first.');
+
+  const btn = $('#btnSubmit'); btn.disabled = true;
+  const { data, error } = await sb.rpc('submit_vote', { p_voter: voterId, p_votes: votes });
+  btn.disabled = false;
+
+  if (error) return toast('Error: ' + error.message);
+  setStatus(`✓ Vote submitted (${data} model${data > 1 ? 's' : ''} ranked)`);
+  toast('Thanks for voting!');
+});
+
+$('#btnClear').addEventListener('click', () => {
+  if (!confirm('Move all models back to Unranked?')) return;
+  TIERS.forEach(t => { placement.pool.push(...placement[t]); placement[t] = []; });
+  localStorage.setItem(LS_DRAFT, JSON.stringify(placement));
+  setStatus('⚠ You have unsubmitted changes');
+  renderVote();
+});
+
+document.body.addEventListener('click', () => { if (selectedId){ selectedId = null; renderVote(); } });
+
+/* ===================== RESULTS ===================== */
+async function loadResults(){
+  $('#resultsMeta').textContent = 'Loading…';
+  const { data, error } = await sb.rpc('get_results');
+  if (error) { $('#resultsMeta').textContent = 'Could not load results: ' + error.message; return; }
+
+  results = (data.items || []).map(r => ({
+    ...r,
+    avg: r.avg ?? 0,
+    communityTier: r.total ? toTier(r.avg) : null,
+  }));
+  $('#resultsMeta').textContent =
+    `${data.totalVoters} voter${data.totalVoters === 1 ? '' : 's'} · updated ${new Date().toLocaleTimeString()}`;
+  renderResults();
+}
+
+function renderResults(){
+  const keys = [...TIERS, 'NA'];
+  const groups = Object.fromEntries(keys.map(k => [k, []]));
+  results.forEach(r => groups[r.communityTier || 'NA'].push(r));
+
+  const wrap = $('#resultTiers');
+  wrap.innerHTML = '';
+  keys.forEach(k => {
+    if (k === 'NA' && !groups.NA.length) return;
+    const row = document.createElement('div');
+    row.className = 'tier';
+    row.innerHTML = k === 'NA'
+      ? `<div class="tier-label small" style="background:#4a5068">No<br>votes</div><div class="tier-drop"></div>`
+      : `<div class="tier-label" style="background:var(--${k})">${k}</div><div class="tier-drop"></div>`;
+    const drop = row.querySelector('.tier-drop');
+    groups[k].forEach(r => drop.appendChild(makeCard(r, {
+      interactive: false,
+      stat: r.total ? `★ ${r.avg.toFixed(2)} · ${r.total} vote${r.total > 1 ? 's' : ''}` : ''
+    })));
+    wrap.appendChild(row);
+  });
+
+  $('#distBody').innerHTML = results.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>CC ${esc(r.no)} · ${esc(r.name)}</td>
+      <td>${r.communityTier || '–'}</td>
+      <td>${r.total ? r.avg.toFixed(2) : '–'}</td>
+      <td>${r.total}</td>
+      <td><div class="bar">${TIERS.map(t => r.counts[t]
+        ? `<span style="width:${r.counts[t] / r.total * 100}%;background:var(--${t})" title="${t}: ${r.counts[t]}"></span>`
+        : '').join('')}</div></td>
+    </tr>`).join('');
+}
+
+$('#btnRefresh').addEventListener('click', loadResults);
+
+$('#btnCsv').addEventListener('click', () => {
+  if (!results.length) return toast('No results to export yet.');
+  const head = ['Rank','No','Name','Community Tier','Avg Score','Total Votes', ...TIERS];
+  const rows = results.map((r, i) => [i + 1, r.no, r.name, r.communityTier || '',
+    r.total ? r.avg.toFixed(2) : '', r.total, ...TIERS.map(t => r.counts[t])]);
+  const csv = [head, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type:'text/csv' }));
+  a.download = 'blokees-rivals-results.csv';
+  a.click();
+});
+
+/* ===================== TABS ===================== */
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + b.dataset.view));
+  if (b.dataset.view === 'results') loadResults();
+}));
+
+/* ===================== INIT ===================== */
+async function init(){
+  const [itemsRes, mineRes] = await Promise.all([
+    sb.from('items').select('id, name, no, img').order('sort').order('no'),
+    sb.rpc('get_my_votes', { p_voter: voterId }),
+  ]);
+  if (itemsRes.error) return setStatus('Cannot connect to database: ' + itemsRes.error.message);
+
+  items = Object.fromEntries(itemsRes.data.map(i => [i.id, i]));
+  const mine = mineRes.data || [];
+
+  let base = JSON.parse(localStorage.getItem(LS_DRAFT) || 'null');
+  if (!base){
+    base = emptyPlacement();
+    mine.forEach(v => base[v.tier] && base[v.tier].push(v.item_id));
+  }
+
+  placement = emptyPlacement();
+  const seen = new Set();
+  [...TIERS, 'pool'].forEach(k => (base[k] || []).forEach(id => {
+    if (items[id] && !seen.has(id)) { placement[k].push(id); seen.add(id); }
+  }));
+  Object.keys(items).forEach(id => { if (!seen.has(id)) placement.pool.push(id); });
+
+  setStatus(mine.length
+    ? '✓ Your vote is saved — you can change it and submit again'
+    : "You haven't voted yet");
+  renderVote();
+}
+init();
+</script>
+</body>
+</html>
