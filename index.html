@@ -357,6 +357,40 @@ async function loadResults(){
     $('#resultsMeta').textContent = 'Could not load results: ' + err.message;
   }
 }
+  function renderResults(){
+  const keys = [...TIERS, 'NA'];
+  const groups = Object.fromEntries(keys.map(k => [k, []]));
+  results.forEach(r => groups[r.communityTier || 'NA'].push(r));
+
+  const wrap = $('#resultTiers');
+  wrap.innerHTML = '';
+  keys.forEach(k => {
+    if (k === 'NA' && !groups.NA.length) return;
+    const row = document.createElement('div');
+    row.className = 'tier';
+    row.innerHTML = k === 'NA'
+      ? `<div class="tier-label small" style="background:#4a5068">No<br>votes</div><div class="tier-drop"></div>`
+      : `<div class="tier-label" style="background:var(--${k})">${k}</div><div class="tier-drop"></div>`;
+    const drop = row.querySelector('.tier-drop');
+    groups[k].forEach(r => drop.appendChild(makeCard(r, {
+      interactive: false,
+      stat: r.total ? `★ ${r.avg.toFixed(2)} · ${r.total} vote${r.total > 1 ? 's' : ''}` : ''
+    })));
+    wrap.appendChild(row);
+  });
+
+  $('#distBody').innerHTML = results.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>CC ${esc(r.no)} · ${esc(r.name)}</td>
+      <td>${r.communityTier || '–'}</td>
+      <td>${r.total ? r.avg.toFixed(2) : '–'}</td>
+      <td>${r.total}</td>
+      <td><div class="bar">${TIERS.map(t => r.counts[t]
+        ? `<span style="width:${r.counts[t] / r.total * 100}%;background:var(--${t})" title="${t}: ${r.counts[t]}"></span>`
+        : '').join('')}</div></td>
+    </tr>`).join('');
+}
 /* ===================== TABS ===================== */
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
